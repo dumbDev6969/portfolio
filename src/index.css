@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  /* Backgrounds */
+  --bg-page: #0a0a0a;         /* page background, near-black */
+  --bg-card: #161616;         /* window/card surface, one step lighter */
+  --bg-card-inset: #1c1c1c;   /* nested surfaces (e.g. input fields) */
+  --border-subtle: #2a2a2a;
+
+  /* Traffic lights (macOS window chrome) — fixed, do not theme these */
+  --dot-red: #ff5f56;
+  --dot-yellow: #ffbd2e;
+  --dot-green: #27c93f;
+
+  /* Text */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a1a1aa;
+  --text-comment: #6a9955;    /* "// eyebrow" labels — VS Code comment green */
+
+  /* Syntax accent palette — used inside code-styled content blocks */
+  --syntax-keyword: #c586c0;  /* const, export, default */
+  --syntax-string: #ce9178;   /* string literal values */
+  --syntax-key: #9cdcfe;      /* object property names */
+  --syntax-link: #3b82f6;     /* clickable links, also primary CTA */
+  --syntax-number: #b5cea8;
+
+  /* Primary accent (buttons, active nav, highlights) */
+  --accent-blue: #3b82f6;
+  --accent-blue-hover: #2563eb;
+
+  /* Fonts */
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
