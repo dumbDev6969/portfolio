@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Laravel From Scratch",
+    "issuer": "Packt",
+    "description": "Learn Laravel from scratch and build a complete web application.",
+    "earned": "2026",
+    "file": "/certifications/laravel-form-scratch.pdf"
+  },
+  {
+    "title": "React Basics",
+    "issuer": "Meta",
+    "description": "Learn the basics of React and build simple web applications.",
+    "earned": "2026",
+    "file": "/certifications/react-basics.pdf"
+  },
+  {
+    "title": "Prompt Like a Pro",
+    "issuer": "Google Cloud",
+    "description": "Learn how to craft effective prompts for AI models.",
+    "earned": "2026",
+    "file": "/certifications/prompt-like-a-pro.pdf"
+  },
+  {
+    "title": "Design Prompts for Everyday Work Tasks",
+    "issuer": "Google Cloud",
+    "description": "Learn how to design prompts for everyday work tasks.",
+    "earned": "2026",
+    "file": "/certifications/design-prompts-for-everyday-work-tasks.pdf"
+  },
+  {
+    "title": "Advanced React",
+    "issuer": "Meta",
+    "description": "Master advanced React concepts and techniques.",
+    "earned": "2026",
+    "file": "/certifications/advanced-react.pdf"
+  }
+]

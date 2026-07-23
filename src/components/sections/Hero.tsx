@@ -1,5 +1,6 @@
 import React from 'react';
 import { CommentEyebrow, CodeButton, WindowCard } from '../theme';
+import { projects as PROJECTS } from '../../data/projects';
 import {
   SiReact,
   SiPhp,
@@ -11,6 +12,21 @@ import {
   SiCss,
   SiJavascript,
 } from 'react-icons/si';
+
+function getProjectBadge(title: string) {
+  const firstWord = title.trim().split(/\s+/)[0] ?? '';
+  const cleaned = firstWord.replace(/[^A-Za-z0-9]/g, '');
+  if (cleaned.length >= 2 && cleaned.length <= 6 && cleaned === cleaned.toUpperCase()) {
+    return cleaned;
+  }
+  return title
+    .split(/\s+/)
+    .map((word) => word[0])
+    .filter(Boolean)
+    .join('')
+    .slice(0, 4)
+    .toUpperCase();
+}
 
 export default function Hero() {
   return (
@@ -147,7 +163,7 @@ export default function Hero() {
       </section>
 
       {/* Stack & Projects Section */}
-      <section id="projects" className="px-6 py-16 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 border-t border-[var(--border-subtle)]">
+      <section id="stack" className="px-6 py-16 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 border-t border-[var(--border-subtle)]">
         {/* Left Column: My Stack */}
         <div className="lg:col-span-5 flex flex-col">
           <CommentEyebrow>My stack</CommentEyebrow>
@@ -274,160 +290,105 @@ export default function Hero() {
           </div>
 
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Project Card 1 */}
-            <WindowCard label="project-1.json">
-              <div className="flex flex-col h-full">
-                {/* Logo & Title */}
-                <div className="flex items-start gap-3 mb-4 select-none">
-                  <div className="flex items-center gap-1 bg-[var(--bg-card-inset)] border border-[var(--border-subtle)] px-2.5 py-1.5 rounded-lg shrink-0">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2L4 20H20L12 2Z" fill="#ff7a00" />
-                      <path d="M8 11H16" stroke="white" strokeWidth="2" />
-                      <path d="M6.5 15H17.5" stroke="white" strokeWidth="2.5" />
-                      <rect x="2" y="20" width="20" height="2" fill="#a1a1aa" />
-                    </svg>
-                    <span className="font-sans font-black text-xs tracking-wider text-blue-500">BLRT</span>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
+            {PROJECTS.map((project, index) => (
+              <WindowCard key={`${project.title}-${index}`} label={`project-${index + 1}.json`}>
+                <div className="flex flex-col h-full">
+                  <div className="flex items-start gap-3 mb-4 select-none">
+                    {project.projectLogo ? (
+                      <div className="h-8 min-w-14 px-2 bg-[var(--bg-card-inset)] border border-[var(--border-subtle)] rounded-lg shrink-0 flex items-center justify-center">
+                        <img
+                          src={project.projectLogo}
+                          alt={`${project.title} logo`}
+                          className="h-5 w-auto object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 bg-[var(--bg-card-inset)] border border-[var(--border-subtle)] px-2.5 py-1.5 rounded-lg shrink-0">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 2L4 20H20L12 2Z" fill="#ff7a00" />
+                          <path d="M8 11H16" stroke="white" strokeWidth="2" />
+                          <path d="M6.5 15H17.5" stroke="white" strokeWidth="2.5" />
+                          <rect x="2" y="20" width="20" height="2" fill="#a1a1aa" />
+                        </svg>
+                        <span className="font-sans font-black text-xs tracking-wider text-blue-500">
+                          {getProjectBadge(project.title)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="font-sans font-bold text-sm text-[var(--text-primary)] leading-tight pt-0.5">
+                      {project.title}
+                    </div>
                   </div>
-                  <div className="font-sans font-bold text-sm text-[var(--text-primary)] leading-tight pt-0.5">
-                    BLRT Driving School<br />Management System
+
+                  <p className="font-sans text-xs text-[var(--text-secondary)] mb-4 leading-relaxed">
+                    {project.description}
+                  </p>
+
+                  <div className="text-[11px] font-mono text-orange-400 mb-2 select-none">Tech Stack</div>
+
+                  <div className="font-mono text-xs leading-normal bg-[var(--bg-card-inset)] border border-[var(--border-subtle)] p-3 rounded-lg flex-1 mb-4 select-none">
+                    <div>
+                      <span className="text-[var(--syntax-keyword)]">const</span>{' '}
+                      <span className="text-[var(--syntax-key)]">project</span>{' '}
+                      <span className="text-[var(--text-primary)]">=</span>{' '}
+                      <span className="text-yellow-500 font-bold">{'{'}</span>
+                    </div>
+                    <div className="pl-4">
+                      <span className="text-[var(--syntax-key)]">name</span>
+                      <span className="text-[var(--text-secondary)]">: </span>
+                      <span className="text-[var(--syntax-string)]">&quot;{project.title}&quot;</span>
+                      <span className="text-[var(--text-secondary)]">,</span>
+                    </div>
+                    <div className="pl-4">
+                      <span className="text-[var(--syntax-key)]">stack</span>
+                      <span className="text-[var(--text-secondary)]">: </span>
+                      <span className="text-yellow-500 font-bold">[</span>
+                      {project.technologies.map((tech, techIndex) => (
+                        <React.Fragment key={`${project.title}-${tech}-${techIndex}`}>
+                          <span className="text-[var(--syntax-string)]">&quot;{tech}&quot;</span>
+                          {techIndex < project.technologies.length - 1 && (
+                            <span className="text-[var(--text-secondary)]">, </span>
+                          )}
+                        </React.Fragment>
+                      ))}
+                      <span className="text-yellow-500 font-bold">]</span>
+                      <span className="text-[var(--text-secondary)]">,</span>
+                    </div>
+                    <div className="pl-4">
+                      <span className="text-[var(--syntax-key)]">repo</span>
+                      <span className="text-[var(--text-secondary)]">: </span>
+                      <span className="text-[var(--syntax-string)]">&quot;</span>
+                      <a
+                        href={project.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[var(--syntax-link)] hover:underline break-all"
+                      >
+                        {project.github}
+                      </a>
+                      <span className="text-[var(--syntax-string)]">&quot;</span>
+                    </div>
+                    <div>
+                      <span className="text-yellow-500 font-bold">{'}'}</span>
+                      <span className="text-[var(--text-secondary)]">;</span>
+                    </div>
+                    <div className="mt-2 text-[var(--syntax-keyword)]">
+                      export default <span className="text-[var(--text-primary)]">project</span>;
+                    </div>
                   </div>
+
+                  <a
+                    href={project.github}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-mono text-xs text-[var(--accent-blue)] hover:text-[var(--accent-blue-hover)] hover:underline flex items-center gap-1 transition-colors mt-auto"
+                  >
+                    &gt;_View repo
+                  </a>
                 </div>
-
-                {/* Description */}
-                <p className="font-sans text-xs text-[var(--text-secondary)] mb-4 leading-relaxed">
-                  A system for managing driving school operations, students, exams, and records efficiently.
-                </p>
-
-                {/* Tech Stack Heading */}
-                <div className="text-[11px] font-mono text-orange-400 mb-2 select-none">Tech Stack</div>
-
-                {/* Tech Stack Syntax Block */}
-                <div className="font-mono text-xs leading-normal bg-[var(--bg-card-inset)] border border-[var(--border-subtle)] p-3 rounded-lg flex-1 mb-4 select-none">
-                  <div>
-                    <span className="text-[var(--syntax-keyword)]">const</span>{' '}
-                    <span className="text-[var(--syntax-key)]">project</span>{' '}
-                    <span className="text-[var(--text-primary)]">=</span>{' '}
-                    <span className="text-yellow-500 font-bold">{'{'}</span>
-                  </div>
-                  <div className="pl-4">
-                    <span className="text-[var(--syntax-key)]">name</span>
-                    <span className="text-[var(--text-secondary)]">: </span>
-                    <span className="text-[var(--syntax-string)]">"BLRT Driving School..."</span>
-                    <span className="text-[var(--text-secondary)]">,</span>
-                  </div>
-                  <div className="pl-4">
-                    <span className="text-[var(--syntax-key)]">stack</span>
-                    <span className="text-[var(--text-secondary)]">: </span>
-                    <span className="text-yellow-500 font-bold">[</span>
-                    <span className="text-[var(--syntax-string)]">"Tailwind"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"Alpine"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"Laravel"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"Livewire"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"MySQL"</span>
-                    <span className="text-yellow-500 font-bold">]</span>
-                    <span className="text-[var(--text-secondary)]">,</span>
-                  </div>
-                  <div className="pl-4">
-                    <span className="text-[var(--syntax-key)]">path</span>
-                    <span className="text-[var(--text-secondary)]">: </span>
-                    <span className="text-[var(--syntax-string)]">"github/path"</span>
-                  </div>
-                  <div>
-                    <span className="text-yellow-500 font-bold">{'}'}</span>
-                    <span className="text-[var(--text-secondary)]">;</span>
-                  </div>
-                  <div className="mt-2 text-[var(--syntax-keyword)]">
-                    export default <span className="text-[var(--text-primary)]">project</span>;
-                  </div>
-                </div>
-
-                {/* View Project Action */}
-                <a
-                  href="#projects/blrt"
-                  className="font-mono text-xs text-[var(--accent-blue)] hover:text-[var(--accent-blue-hover)] hover:underline flex items-center gap-1 transition-colors mt-auto"
-                >
-                  &gt;_View project
-                </a>
-              </div>
-            </WindowCard>
-
-            {/* Project Card 2 (Identical to match the screenshot) */}
-            <WindowCard label="project-2.json">
-              <div className="flex flex-col h-full">
-                {/* Logo & Title */}
-                <div className="flex items-start gap-3 mb-4 select-none">
-                  <div className="flex items-center gap-1 bg-[var(--bg-card-inset)] border border-[var(--border-subtle)] px-2.5 py-1.5 rounded-lg shrink-0">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2L4 20H20L12 2Z" fill="#ff7a00" />
-                      <path d="M8 11H16" stroke="white" strokeWidth="2" />
-                      <path d="M6.5 15H17.5" stroke="white" strokeWidth="2.5" />
-                      <rect x="2" y="20" width="20" height="2" fill="#a1a1aa" />
-                    </svg>
-                    <span className="font-sans font-black text-xs tracking-wider text-blue-500">BLRT</span>
-                  </div>
-                  <div className="font-sans font-bold text-sm text-[var(--text-primary)] leading-tight pt-0.5">
-                    BLRT Driving School<br />Management System
-                  </div>
-                </div>
-
-                {/* Description */}
-                <p className="font-sans text-xs text-[var(--text-secondary)] mb-4 leading-relaxed">
-                  A system for managing driving school operations, students, exams, and records efficiently.
-                </p>
-
-                {/* Tech Stack Heading */}
-                <div className="text-[11px] font-mono text-orange-400 mb-2 select-none">Tech Stack</div>
-
-                {/* Tech Stack Syntax Block */}
-                <div className="font-mono text-xs leading-normal bg-[var(--bg-card-inset)] border border-[var(--border-subtle)] p-3 rounded-lg flex-1 mb-4 select-none">
-                  <div>
-                    <span className="text-[var(--syntax-keyword)]">const</span>{' '}
-                    <span className="text-[var(--syntax-key)]">project</span>{' '}
-                    <span className="text-[var(--text-primary)]">=</span>{' '}
-                    <span className="text-yellow-500 font-bold">{'{'}</span>
-                  </div>
-                  <div className="pl-4">
-                    <span className="text-[var(--syntax-key)]">name</span>
-                    <span className="text-[var(--text-secondary)]">: </span>
-                    <span className="text-[var(--syntax-string)]">"BLRT Driving School..."</span>
-                    <span className="text-[var(--text-secondary)]">,</span>
-                  </div>
-                  <div className="pl-4">
-                    <span className="text-[var(--syntax-key)]">stack</span>
-                    <span className="text-[var(--text-secondary)]">: </span>
-                    <span className="text-yellow-500 font-bold">[</span>
-                    <span className="text-[var(--syntax-string)]">"Tailwind"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"Alpine"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"Laravel"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"Livewire"</span>
-                    <span className="text-[var(--text-secondary)]">, </span>
-                    <span className="text-[var(--syntax-string)]">"MySQL"</span>
-                    <span className="text-yellow-500 font-bold">]</span>
-                    <span className="text-[var(--text-secondary)]">,</span>
-                  </div>
-                  <div className="pl-4">
-                    <span className="text-[var(--syntax-key)]">path</span>
-                    <span className="text-[var(--text-secondary)]">: </span>
-                    <span className="text-[var(--syntax-string)]">"github/path"</span>
-                  </div>
-                  <div>
-                    <span className="text-yellow-500 font-bold">{'}'}</span>
-                    <span className="text-[var(--text-secondary)]">;</span>
-                  </div>
-                  <div className="mt-2 text-[var(--syntax-keyword)]">
-                    export default <span className="text-[var(--text-primary)]">project</span>;
-                  </div>
-                </div>
-              </div>
-            </WindowCard>
+              </WindowCard>
+            ))}
           </div>
         </div>
       </section>

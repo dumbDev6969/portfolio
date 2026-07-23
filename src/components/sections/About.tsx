@@ -279,8 +279,6 @@ export default function About() {
       </div>
     </section>
 
-    {/* Certificates anchor — activates 'certificates' nav item on scroll */}
-    <div id="certificates" className="w-full" />
     </>
   );
 }

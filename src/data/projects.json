@@ -1,1 +1,9 @@
-[]
+[
+    {
+        "title": "BLRT Driving School Management System",
+        "description": "A web application for managing driving school operations, including automating instruction matching, student enrollment, scheduling, and progress tracking.",
+        "technologies": ["Tailwind", "Alpine.js", "Laravel", "Livewire", "MySQL"],
+        "github": "https://github.com/dumbDev6969/blrt-dsms",
+        "projectLogo": "/project-logo/blrtlogo.png"
+    }
+]

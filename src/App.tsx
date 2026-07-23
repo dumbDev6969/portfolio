@@ -1,8 +1,6 @@
-import { useState } from 'react'
-
 import './App.css'
 import { Nav } from './components/nav'
-import { Hero, About } from './components/sections'
+import { Hero, About, Projects, Certifications } from './components/sections'
 
 function App() {
   return (
@@ -10,6 +8,8 @@ function App() {
       <Nav />
       <Hero />
       <About />
+      <Projects />
+      <Certifications />
     </div>
   );
 }

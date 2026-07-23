@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const NAV_ITEMS = ['home', 'about', 'projects', 'certificates'];
+const NAV_ITEMS = ['home', 'about', 'projects', 'certifications', 'contact'];
 
 export default function Nav() {
   const [isOpen, setIsOpen] = useState(false);
