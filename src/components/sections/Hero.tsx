@@ -1,6 +1,7 @@
 import React from 'react';
 import { CommentEyebrow, CodeButton, WindowCard } from '../theme';
 import { projects as PROJECTS } from '../../data/projects';
+import { cv as CV } from '../../data/cv';
 import {
   SiReact,
   SiPhp,
@@ -55,8 +56,10 @@ export default function Hero() {
           </div>
 
           <div className="flex flex-wrap gap-4">
-            <CodeButton variant="primary">View my works</CodeButton>
-            <CodeButton variant="secondary">Hire me</CodeButton>
+            <CodeButton variant="primary" href={CV.file} target="_blank" rel="noreferrer">
+              open resume.pdf
+            </CodeButton>
+            <CodeButton variant="secondary" href="#contact">contact --hire</CodeButton>
           </div>
         </div>
 
@@ -285,7 +288,7 @@ export default function Hero() {
               href="#projects"
               className="font-mono text-xs text-[var(--accent-blue)] hover:text-[var(--accent-blue-hover)] hover:underline flex items-center gap-1 transition-colors"
             >
-              &gt;_View my works
+              &gt;_ls projects
             </a>
           </div>
 

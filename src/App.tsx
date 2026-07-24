@@ -1,6 +1,6 @@
 import './App.css'
 import { Nav } from './components/nav'
-import { Hero, About, Projects, Certifications } from './components/sections'
+import { Hero, About, Projects, Certifications, Contact } from './components/sections'
 
 function App() {
   return (
@@ -10,6 +10,7 @@ function App() {
       <About />
       <Projects />
       <Certifications />
+      <Contact />
     </div>
   );
 }
