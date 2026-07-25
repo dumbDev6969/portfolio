@@ -1,7 +1,8 @@
+import { type FormEvent, useState } from 'react';
 import { CodeButton, CommentEyebrow, SectionHeading, WindowCard } from '../theme';
 import { contact } from '../../data/contact';
 
-const WEB3FORMS_ACCESS_KEY = '';
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_KEY || '';
 const CONTACT_LINKS = [
   { label: 'LinkedIn', url: contact.linkedin },
   { label: 'GitHub', url: contact.github },
@@ -9,6 +10,43 @@ const CONTACT_LINKS = [
 ];
 
 export default function Contact() {
+  const [result, setResult] = useState('');
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!WEB3FORMS_ACCESS_KEY) {
+      setResult('Error: Missing Web3Forms access key.');
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    formData.append('access_key', WEB3FORMS_ACCESS_KEY);
+
+    setResult('Sending...');
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data: { success?: boolean; message?: string } = await response.json();
+
+      if (response.ok && data.success) {
+        setResult('Success! Message sent.');
+        form.reset();
+        return;
+      }
+
+      const errorMessage = data.message ? `Error: ${data.message}` : 'Error: Unable to send message.';
+      setResult(errorMessage);
+    } catch {
+      setResult('Error: Unable to send message.');
+    }
+  };
+
   return (
     <section
       id="contact"
@@ -151,12 +189,7 @@ export default function Contact() {
 
         <div className="lg:col-span-7">
           <WindowCard label="send-message.form">
-            <form
-              action="https://api.web3forms.com/submit"
-              method="POST"
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <input type="hidden" name="access_key" value={WEB3FORMS_ACCESS_KEY} />
+            <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input type="hidden" name="subject" value="Portfolio Contact Form Message" />
               <input type="hidden" name="from_name" value="Portfolio Contact Form" />
 
@@ -220,9 +253,15 @@ export default function Contact() {
                 <CodeButton>Send Message</CodeButton>
               </div>
 
+              {result && (
+                <p className="md:col-span-2 text-[11px] text-[var(--text-secondary)]" aria-live="polite">
+                  {result}
+                </p>
+              )}
+
               {!WEB3FORMS_ACCESS_KEY && (
                 <p className="md:col-span-2 text-[11px] text-[var(--text-secondary)]">
-                  Set your Web3Forms access key in this component before using live submit.
+                  Set your Web3Forms access key in .env as VITE_WEB3FORMS_KEY.
                 </p>
               )}
             </form>

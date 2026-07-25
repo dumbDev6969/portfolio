@@ -92,6 +92,31 @@ code, pre, .font-mono {
   animation: orbit var(--duration, 25s) linear infinite;
 }
 
+.chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-secondary) var(--bg-card-inset);
+}
+
+.chat-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: var(--bg-card-inset);
+  border-left: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border: 2px solid var(--bg-card-inset);
+  border-radius: 9999px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-blue);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orbiting-item {
     animation: none;
