@@ -1,5 +1,6 @@
 import projectsData from '../data/projects.json' with { type: 'json' };
 import certificatesData from '../data/certificates.json' with { type: 'json' };
+import contactData from '../data/contact.json' with { type: 'json' };
 
 export type ChatHistoryTurn = {
   role: 'user' | 'assistant';
@@ -16,6 +17,10 @@ type CertificateRecord = {
   title: string;
   issuer: string;
   earned: string;
+};
+
+type ContactRecord = {
+  [key: string]: string;
 };
 
 type GeminiPart = {
@@ -69,6 +74,14 @@ function isCertificateRecord(value: unknown): value is CertificateRecord {
   return typeof item.title === 'string' && typeof item.issuer === 'string' && typeof item.earned === 'string';
 }
 
+function isContactRecord(value: unknown): value is ContactRecord {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.values(value).every((field) => typeof field === 'string');
+}
+
 function normalizeModelName(modelValue: string | undefined) {
   const raw = modelValue?.trim();
   if (!raw) {
@@ -115,6 +128,7 @@ async function parseGeminiResponse(response: Response) {
 export function buildSystemContext() {
   const validProjects = projectsData.filter(isProjectRecord);
   const validCertificates = certificatesData.filter(isCertificateRecord);
+  const validContact: ContactRecord = isContactRecord(contactData) ? contactData : {};
 
   const projectSummaries = validProjects
     .map((project) => `- ${project.title}: ${project.description} (Tech: ${project.technologies.join(', ')})`)
@@ -124,13 +138,21 @@ export function buildSystemContext() {
     .map((certificate) => `- ${certificate.title} (${certificate.issuer}, ${certificate.earned})`)
     .join('\n');
 
+  const contactSummaries = Object.entries(validContact)
+    .filter(([, value]) => value.trim().length > 0)
+    .map(([field, value]) => `- ${field}: ${value}`)
+    .join('\n');
+
   return `${STATIC_BIO_CONTEXT}
 
 Projects:
 ${projectSummaries || '- No project records available.'}
 
 Certifications:
-${certSummaries || '- No certification records available.'}`;
+${certSummaries || '- No certification records available.'}
+
+Contact:
+${contactSummaries || '- No contact records available.'}`;
 }
 
 export function mapHistoryToGemini(history: ChatHistoryTurn[]) {

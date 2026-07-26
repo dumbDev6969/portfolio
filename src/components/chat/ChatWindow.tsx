@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { WindowCard } from '../theme';
 import ChatMessage from './ChatMessage';
+import { commandRegistry } from './commands';
 
 type ChatWindowProps = {
   onClose: () => void;
@@ -12,6 +13,7 @@ type ChatUiMessage = {
   role: ChatRole;
   message: string;
   timestamp: string;
+  localOnly?: boolean;
 };
 
 type ChatHistoryTurn = {
@@ -22,7 +24,7 @@ type ChatHistoryTurn = {
 const INITIAL_MESSAGES: ChatUiMessage[] = [
   {
     role: 'assistant' as const,
-    message: 'Hey! I am your portfolio assistant. Ask me about projects, stack, or experience.',
+    message: 'Hey! I am joshua.exe. Ask me about projects, stack, or experience (or try `help`).',
     timestamp: '09:41',
   },
 ];
@@ -32,7 +34,7 @@ function getCurrentTimeLabel() {
 }
 
 function toHistory(messages: ChatUiMessage[]): ChatHistoryTurn[] {
-  return messages.map((entry) => ({
+  return messages.filter((entry) => !entry.localOnly).map((entry) => ({
     role: entry.role,
     message: entry.message,
   }));
@@ -80,6 +82,33 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     const trimmedMessage = inputValue.trim();
     if (!trimmedMessage) {
       setErrorMessage('Please type a message before sending.');
+      return;
+    }
+
+    const normalizedMessage = trimmedMessage.toLowerCase();
+    const commandHandler = commandRegistry[normalizedMessage];
+    if (commandHandler) {
+      let shouldClearChat = false;
+      const responseMessage = commandHandler({
+        clearChatHistory: () => {
+          shouldClearChat = true;
+        },
+      });
+
+      setErrorMessage('');
+      setInputValue('');
+      setMessages((current) => {
+        const nextMessages = shouldClearChat ? [] : current;
+        return [
+          ...nextMessages,
+          {
+            role: 'assistant',
+            message: responseMessage,
+            timestamp: getCurrentTimeLabel(),
+            localOnly: true,
+          },
+        ];
+      });
       return;
     }
 
@@ -142,12 +171,12 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   };
 
   return (
-    <WindowCard label="portfolio-assistant.chat">
+    <WindowCard label="joshua.exe">
       <div className="w-full max-w-[22rem] sm:max-w-sm">
         <div className="mb-3 flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-3">
           <div>
             <p className="font-mono text-[11px] text-[var(--text-comment)]">// status</p>
-            <p className="text-xs text-[var(--text-secondary)]">{isSending ? 'thinking...' : 'online • Gemini'}</p>
+            <p className="text-xs text-[var(--text-secondary)]">{isSending ? 'thinking...' : 'online'}</p>
           </div>
           <button
             type="button"
@@ -160,9 +189,9 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         </div>
 
         <div ref={messagesContainerRef} className="chat-scrollbar max-h-72 space-y-3 overflow-y-auto pr-1">
-          {messages.map((entry) => (
+          {messages.map((entry, index) => (
             <ChatMessage
-              key={`${entry.role}-${entry.timestamp}-${entry.message}`}
+              key={`${entry.role}-${entry.timestamp}-${index}`}
               role={entry.role}
               message={entry.message}
               timestamp={entry.timestamp}

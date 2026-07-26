@@ -2,7 +2,8 @@ import { type FormEvent, useState } from 'react';
 import { CodeButton, CommentEyebrow, SectionHeading, WindowCard } from '../theme';
 import { contact } from '../../data/contact';
 
-const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_KEY || '';
+const WEB3FORMS_ACCESS_KEY =
+  import.meta.env.VITE_WEB3FORMS_KEY || import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '';
 const CONTACT_LINKS = [
   { label: 'LinkedIn', url: contact.linkedin },
   { label: 'GitHub', url: contact.github },
@@ -261,7 +262,8 @@ export default function Contact() {
 
               {!WEB3FORMS_ACCESS_KEY && (
                 <p className="md:col-span-2 text-[11px] text-[var(--text-secondary)]">
-                  Set your Web3Forms access key in .env as VITE_WEB3FORMS_KEY.
+                  Set your Web3Forms access key in .env as VITE_WEB3FORMS_KEY (or
+                  VITE_WEB3FORMS_ACCESS_KEY).
                 </p>
               )}
             </form>

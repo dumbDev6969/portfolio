@@ -5,5 +5,12 @@
         "technologies": ["Tailwind", "Alpine.js", "Laravel", "Livewire", "MySQL"],
         "github": "https://github.com/dumbDev6969/blrt-dsms",
         "projectLogo": "/project-logo/blrtlogo.png"
+    },
+    {
+        "title": " San Carlos City Website Prototype",
+        "description": "A prototype I created for the San Carlos City website when I was interning, showcasing a modern and user-friendly design.",
+        "technologies": ["Tailwind", "AOS (Animate On Scroll)", "HTML", "CSS", "JavaScript"],
+        "github": "https://dumbdev6969.github.io/",
+        "projectLogo": ""
     }
 ]

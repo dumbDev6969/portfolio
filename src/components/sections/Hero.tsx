@@ -1,5 +1,5 @@
-import React from 'react';
-import { CommentEyebrow, CodeButton, WindowCard } from '../theme';
+import React, { useEffect, useState } from 'react';
+import { CommentEyebrow, CodeButton, StaggeredWordHeading, WindowCard } from '../theme';
 import { projects as PROJECTS } from '../../data/projects';
 import { cv as CV } from '../../data/cv';
 import {
@@ -29,7 +29,29 @@ function getProjectBadge(title: string) {
     .toUpperCase();
 }
 
+const INTRODUCTION_TEXT =
+  'I build modern, responsive, scalable web applications with clean code and greate user experience. Passionate about Laravel, Livewire, and React.';
+
 export default function Hero() {
+  const [typedIntroduction, setTypedIntroduction] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const heroProjects = PROJECTS.slice(0, 2);
+
+  useEffect(() => {
+    let currentIndex = 0;
+    const typingTimer = window.setInterval(() => {
+      currentIndex += 1;
+      setTypedIntroduction(INTRODUCTION_TEXT.slice(0, currentIndex));
+
+      if (currentIndex >= INTRODUCTION_TEXT.length) {
+        window.clearInterval(typingTimer);
+        setIsTypingComplete(true);
+      }
+    }, 22);
+
+    return () => window.clearInterval(typingTimer);
+  }, []);
+
   return (
     <div id="home" className="w-full flex flex-col items-center">
       {/* Hero Intro Section */}
@@ -40,20 +62,27 @@ export default function Hero() {
 
           <h1 className="text-5xl md:text-6xl font-bold text-[var(--text-primary)] leading-tight tracking-tight mb-6">
             Joshua
-            <span className="block text-4xl md:text-5xl font-bold mt-2">
-              <span className="text-[var(--accent-blue)]">Full-stack</span> Developer
-            </span>
+            <StaggeredWordHeading
+              text="Full-stack Developer"
+              accentWord="Full-stack"
+              shouldReveal={isTypingComplete}
+              className="block text-4xl md:text-5xl font-bold mt-2"
+            />
           </h1>
 
-          <div className="font-mono text-sm leading-relaxed mb-8 select-none">
-            <span className="text-[var(--syntax-keyword)]">const</span>{' '}
-            <span className="text-[var(--syntax-key)]">introduction</span>{' '}
-            <span className="text-[var(--text-primary)]">=</span>{' '}
-            <span className="text-[var(--syntax-string)]">
-              "I build modern, responsive, scalable web applications with clean code and greate user experience. Passionate about Laravel, Livewire, and React."
-            </span>
-            <span className="text-[var(--text-secondary)]">;</span>
-          </div>
+         <div className="font-mono text-sm leading-relaxed mb-8 select-none">
+  <span className="text-[var(--syntax-keyword)]">const</span>{' '}
+  <span className="text-[var(--syntax-key)]">introduction</span>{' '}
+  <span className="text-[var(--text-primary)]">=</span>{' '}
+  <span className="text-[var(--syntax-string)]">
+    "{typedIntroduction}"
+    <span
+      className="ml-0.5 inline-block h-[13px] w-[7px] bg-current align-[-1px]"
+      style={{ animation: 'cursor-blink 1s step-end infinite' }}
+    />
+  </span>
+  <span className="text-[var(--text-secondary)]">;</span>
+</div>
 
           <div className="flex flex-wrap gap-4">
             <CodeButton variant="primary" href={CV.file} target="_blank" rel="noreferrer">
@@ -294,7 +323,7 @@ export default function Hero() {
 
           {/* Projects Grid */}
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
-            {PROJECTS.map((project, index) => (
+            {heroProjects.map((project, index) => (
               <WindowCard key={`${project.title}-${index}`} label={`project-${index + 1}.json`}>
                 <div className="flex flex-col h-full">
                   <div className="flex items-start gap-3 mb-4 select-none">
@@ -359,7 +388,6 @@ export default function Hero() {
                       <span className="text-[var(--text-secondary)]">,</span>
                     </div>
                     <div className="pl-4">
-                      <span className="text-[var(--syntax-key)]">repo</span>
                       <span className="text-[var(--text-secondary)]">: </span>
                       <span className="text-[var(--syntax-string)]">&quot;</span>
                       <a

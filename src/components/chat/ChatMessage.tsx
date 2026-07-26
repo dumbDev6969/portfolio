@@ -57,7 +57,7 @@ function renderMessageBlocks(message: string) {
         index += 1;
       }
       blocks.push(
-        <ul key={`ul-${index}`} className="list-disc space-y-1 pl-5">
+        <ul key={`ul-${index}`} className="list-disc space-y-1 pl-5 [overflow-wrap:anywhere]">
           {items.map((item, itemIndex) => (
             <li key={`ul-item-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
           ))}
@@ -77,7 +77,7 @@ function renderMessageBlocks(message: string) {
         index += 1;
       }
       blocks.push(
-        <ol key={`ol-${index}`} className="list-decimal space-y-1 pl-5">
+        <ol key={`ol-${index}`} className="list-decimal space-y-1 pl-5 [overflow-wrap:anywhere]">
           {items.map((item, itemIndex) => (
             <li key={`ol-item-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
           ))}
@@ -107,7 +107,7 @@ function renderMessageBlocks(message: string) {
     }
 
     blocks.push(
-      <p key={`p-${index}`} className="whitespace-pre-wrap">
+      <p key={`p-${index}`} className="whitespace-pre-wrap [overflow-wrap:anywhere]">
         {renderInlineMarkdown(paragraphLines.join(' '))}
       </p>
     );
@@ -129,7 +129,7 @@ export default function ChatMessage({ role, message, timestamp }: ChatMessagePro
         }`}
       >
         <p className="font-mono text-[11px] text-[var(--text-comment)]">// {role}</p>
-        <div className="mt-1 space-y-2 text-[13px] leading-relaxed text-[var(--text-primary)]">
+        <div className="mt-1 space-y-2 break-words text-[13px] leading-relaxed text-[var(--text-primary)] [overflow-wrap:anywhere]">
           {renderMessageBlocks(message)}
         </div>
         <p className="mt-1 text-right font-mono text-[10px] text-[var(--text-secondary)]">{timestamp}</p>

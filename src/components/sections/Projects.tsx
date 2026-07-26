@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CommentEyebrow, SectionHeading, WindowCard, CodeButton } from '../theme';
 import { projects } from '../../data/projects';
 
@@ -18,6 +18,10 @@ function getProjectBadge(title: string) {
 }
 
 export default function Projects() {
+  const [showAllProjects, setShowAllProjects] = useState(false);
+  const hasHiddenProjects = projects.length > 2;
+  const visibleProjects = showAllProjects ? projects : projects.slice(0, 2);
+
   return (
     <section
       id="projects"
@@ -32,7 +36,7 @@ export default function Projects() {
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
-        {projects.map((project, index) => (
+        {visibleProjects.map((project, index) => (
           <WindowCard key={`${project.title}-${index}`} label={`project-${index + 1}.json`}>
             <div className="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-card-inset)] overflow-hidden">
               <div className="border-b border-[var(--border-subtle)] p-4 flex items-center justify-between gap-3">
@@ -120,6 +124,14 @@ export default function Projects() {
           </WindowCard>
         ))}
       </div>
+
+      {hasHiddenProjects && !showAllProjects && (
+        <div className="mt-8 flex justify-center">
+          <CodeButton variant="secondary" onClick={() => setShowAllProjects(true)}>
+            view all projects
+          </CodeButton>
+        </div>
+      )}
     </section>
   );
 }
