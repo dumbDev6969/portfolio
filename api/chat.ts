@@ -1,6 +1,7 @@
-export const runtime = 'edge';
+import { MAX_HISTORY_TURNS, callGeminiWithFallback, type ChatHistoryTurn } from '../src/server/chatHandler.ts';
+import type { IncomingMessage, ServerResponse } from 'http';
 
-import { MAX_HISTORY_TURNS, callGeminiWithFallback, type ChatHistoryTurn } from '../src/server/chatHandler.js';
+type NodeRequest = IncomingMessage & { body?: unknown };
 
 type ChatRequestBody = {
   message: string;
@@ -31,6 +32,8 @@ type ParsedBodyResult =
 
 type GateResult = { ok: true } | { ok: false; status: number; body: ChatResponseBody };
 
+type ErrorResult = { status: number; body: ChatResponseBody };
+
 const MAX_REQUEST_BYTES = 16 * 1024;
 const MAX_MESSAGE_CHARS = 1200;
 const MAX_HISTORY_MESSAGE_CHARS = 1200;
@@ -38,11 +41,17 @@ const DEFAULT_RATE_LIMIT_MAX = 5;
 const DEFAULT_RATE_LIMIT_WINDOW_SECONDS = 3600;
 const textEncoder = new TextEncoder();
 
-function jsonResponse(body: ChatResponseBody, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+// Safely read a single header value from a Node.js IncomingMessage.
+function getHeader(req: NodeRequest, name: string): string | null {
+  const value = req.headers[name.toLowerCase()];
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function sendJson(res: ServerResponse, body: ChatResponseBody, status: number): void {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(body));
 }
 
 function isProductionRuntime() {
@@ -74,7 +83,7 @@ function isLocalOrigin(value: string | null) {
   }
 }
 
-function hasAllowedOrigin(req: Request): GateResult {
+function hasAllowedOrigin(req: NodeRequest): GateResult {
   const isProduction = isProductionRuntime();
   const configuredOrigin = process.env.CHAT_ALLOWED_ORIGIN?.trim() || '';
   if (!configuredOrigin) {
@@ -98,8 +107,8 @@ function hasAllowedOrigin(req: Request): GateResult {
     };
   }
 
-  const origin = req.headers.get('origin');
-  const referer = req.headers.get('referer');
+  const origin = getHeader(req, 'origin');
+  const referer = getHeader(req, 'referer');
   const isNonProduction = !isProduction;
 
   if (isNonProduction && (isLocalOrigin(origin) || isLocalOrigin(referer))) {
@@ -209,8 +218,8 @@ function getRateLimitSettings() {
   };
 }
 
-function getClientIp(req: Request) {
-  const forwardedFor = req.headers.get('x-forwarded-for');
+function getClientIp(req: NodeRequest): string | null {
+  const forwardedFor = getHeader(req, 'x-forwarded-for');
   if (forwardedFor) {
     const firstIp = forwardedFor
       .split(',')
@@ -221,7 +230,7 @@ function getClientIp(req: Request) {
     }
   }
 
-  const realIp = req.headers.get('x-real-ip');
+  const realIp = getHeader(req, 'x-real-ip');
   if (realIp && realIp.trim().length > 0) {
     return realIp.trim();
   }
@@ -266,12 +275,12 @@ function asNumber(value: unknown) {
   return null;
 }
 
-async function enforceRateLimit(req: Request): Promise<Response | null> {
+async function enforceRateLimit(req: NodeRequest): Promise<ErrorResult | null> {
   const isProduction = isProductionRuntime();
   const clientIp = getClientIp(req);
   if (!clientIp) {
     if (isProduction) {
-      return jsonResponse({ error: 'Unable to determine client IP.', code: 'missing_client_ip' }, 400);
+      return { status: 400, body: { error: 'Unable to determine client IP.', code: 'missing_client_ip' } };
     }
     return null;
   }
@@ -293,7 +302,7 @@ async function enforceRateLimit(req: Request): Promise<Response | null> {
     const counterResult = await callKv(kv.url, kv.token, `/incr/${key}`);
     const hitCount = asNumber(counterResult);
     if (hitCount === null) {
-      return jsonResponse({ error: 'Rate limiter failed to parse counter state.', code: 'rate_limit_unavailable' }, 500);
+      return { status: 500, body: { error: 'Rate limiter failed to parse counter state.', code: 'rate_limit_unavailable' } };
     }
 
     if (hitCount === 1) {
@@ -301,58 +310,60 @@ async function enforceRateLimit(req: Request): Promise<Response | null> {
     }
 
     if (hitCount > settings.maxRequests) {
-      return jsonResponse(
-        {
+      return {
+        status: 429,
+        body: {
           error: `Too many requests. Limit is ${settings.maxRequests} per ${settings.windowSeconds} seconds.`,
           code: 'rate_limit_exceeded',
         },
-        429
-      );
+      };
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Rate limiter request failed.';
-    return jsonResponse({ error: message, code: 'rate_limit_unavailable' }, 500);
+    return { status: 500, body: { error: message, code: 'rate_limit_unavailable' } };
   }
 
   return null;
 }
 
-export default async function handler(req: Request) {
+export default async function handler(req: NodeRequest, res: ServerResponse): Promise<void> {
   if (req.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed.' }, 405);
+    sendJson(res, { error: 'Method not allowed.' }, 405);
+    return;
   }
 
   const originCheck = hasAllowedOrigin(req);
   if (!originCheck.ok) {
-    return jsonResponse(originCheck.body, originCheck.status);
+    sendJson(res, originCheck.body, originCheck.status);
+    return;
   }
 
-  const declaredSize = req.headers.get('content-length');
+  const declaredSize = getHeader(req, 'content-length');
   if (declaredSize) {
     const parsedSize = Number(declaredSize);
     if (Number.isFinite(parsedSize) && parsedSize > MAX_REQUEST_BYTES) {
-      return jsonResponse(
-        { error: `Payload exceeds max size of ${MAX_REQUEST_BYTES} bytes.`, code: 'payload_too_large' },
-        413
-      );
+      sendJson(res, { error: `Payload exceeds max size of ${MAX_REQUEST_BYTES} bytes.`, code: 'payload_too_large' }, 413);
+      return;
     }
   }
 
-  let rawBody: unknown;
-  try {
-    rawBody = await req.json();
-  } catch {
-    return jsonResponse({ error: 'Invalid JSON payload.', code: 'invalid_payload' }, 400);
+  // Vercel's Node.js runtime auto-parses JSON request bodies onto req.body
+  const rawBody = req.body;
+  if (rawBody === undefined || rawBody === null) {
+    sendJson(res, { error: 'Invalid JSON payload.', code: 'invalid_payload' }, 400);
+    return;
   }
 
   const parsedBody = parseRequestBody(rawBody);
   if (!parsedBody.ok) {
-    return jsonResponse(parsedBody.body, parsedBody.status);
+    sendJson(res, parsedBody.body, parsedBody.status);
+    return;
   }
 
-  const rateLimitResponse = await enforceRateLimit(req);
-  if (rateLimitResponse) {
-    return rateLimitResponse;
+  const rateLimitResult = await enforceRateLimit(req);
+  if (rateLimitResult !== null) {
+    sendJson(res, rateLimitResult.body, rateLimitResult.status);
+    return;
   }
 
   const result = await callGeminiWithFallback(
@@ -363,5 +374,5 @@ export default async function handler(req: Request) {
     process.env.GEMINI_MODEL_FALLBACK
   );
 
-  return jsonResponse(result.body, result.status);
+  sendJson(res, result.body, result.status);
 }
