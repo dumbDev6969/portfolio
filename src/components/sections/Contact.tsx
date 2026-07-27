@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react';
-import { CodeButton, CommentEyebrow, SectionHeading, WindowCard } from '../theme';
+import { CodeButton, CommentEyebrow, SectionHeading, SiteFooter, WindowCard } from '../theme';
 import { contact } from '../../data/contact';
 
 const WEB3FORMS_ACCESS_KEY =
@@ -270,6 +270,7 @@ export default function Contact() {
           </WindowCard>
         </div>
       </div>
+      <SiteFooter />
     </section>
   );
 }

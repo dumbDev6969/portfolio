@@ -4,3 +4,4 @@ export { default as SectionHeading } from './SectionHeading';
 export { default as CodeButton } from './CodeButton';
 export { default as CodeKV } from './CodeKv';
 export { default as StaggeredWordHeading } from './StaggeredWordHeading';
+export { default as SiteFooter } from './SiteFooter';

@@ -23,3 +23,4 @@ const DEFAULT_CONTACT: ContactRecord = {
 };
 
 export const contact: ContactRecord = isContactRecord(contactData) ? contactData : DEFAULT_CONTACT;
+export const SITE_OWNER_NAME = 'Joshua Cabuang';
