@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { MAX_HISTORY_TURNS, callGeminiWithFallback, type ChatHistoryTurn } from '../src/server/chatHandler.js';
 
 type ChatRequestBody = {
