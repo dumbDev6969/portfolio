@@ -1,11 +1,10 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { callGeminiWithFallback, type ChatHistoryTurn } from './src/server/chatHandler.ts';
 
 type ChatRequestBody = {
   message: string;
-  history?: ChatHistoryTurn[];
+  history?: { role: 'user' | 'assistant'; message: string }[];
 };
 
 async function readRequestBody(req: NodeJS.ReadableStream) {
@@ -16,7 +15,7 @@ async function readRequestBody(req: NodeJS.ReadableStream) {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-function isHistoryTurn(value: unknown): value is ChatHistoryTurn {
+function isHistoryTurn(value: unknown): value is { role: 'user' | 'assistant'; message: string } {
   if (!value || typeof value !== 'object') {
     return false;
   }
@@ -94,6 +93,7 @@ export default defineConfig(({ mode }) => {
                 return;
               }
 
+              const { callGeminiWithFallback } = await import('./src/server/chatHandler.ts');
               const result = await callGeminiWithFallback(
                 parsedBody.message,
                 parsedBody.history ?? [],

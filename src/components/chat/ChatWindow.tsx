@@ -49,6 +49,15 @@ function getPayloadError(payload: unknown) {
   return typeof value.error === 'string' && value.error.trim() ? value.error : null;
 }
 
+function getPayloadCode(payload: unknown) {
+  if (!payload || typeof payload !== 'object') {
+    return null;
+  }
+
+  const value = payload as Record<string, unknown>;
+  return typeof value.code === 'string' && value.code.trim() ? value.code : null;
+}
+
 function getPayloadReply(payload: unknown) {
   if (!payload || typeof payload !== 'object') {
     return null;
@@ -56,6 +65,22 @@ function getPayloadReply(payload: unknown) {
 
   const value = payload as Record<string, unknown>;
   return typeof value.reply === 'string' && value.reply.trim() ? value.reply : null;
+}
+
+function buildChatErrorMessage(status: number, code: string | null, fallbackMessage: string) {
+  if (status === 429 && code === 'provider_quota_exceeded') {
+    return 'The AI daily quota is exhausted right now. Please try again later.';
+  }
+
+  if (status === 429 && code === 'rate_limit_exceeded') {
+    return 'You are sending messages too fast. Please wait a bit and try again.';
+  }
+
+  if (status >= 500 || code === 'misconfigured_server') {
+    return 'Chat is temporarily unavailable due to backend configuration/service issues.';
+  }
+
+  return fallbackMessage;
 }
 
 export default function ChatWindow({ onClose }: ChatWindowProps) {
@@ -144,7 +169,9 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
         if (!response.ok) {
           const apiError = getPayloadError(payload);
-          setErrorMessage(apiError || `Request failed with status ${response.status}.`);
+          const apiCode = getPayloadCode(payload);
+          const fallbackError = apiError || `Request failed with status ${response.status}.`;
+          setErrorMessage(buildChatErrorMessage(response.status, apiCode, fallbackError));
           return;
         }
 
@@ -163,7 +190,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           },
         ]);
       } catch {
-        setErrorMessage('Unable to reach the chat service. Please try again.');
+        setErrorMessage('Chat is currently unreachable. Please try again later.');
       } finally {
         setIsSending(false);
       }

@@ -135,16 +135,36 @@ GEMINI_API_KEY=your_gemini_api_key
 GEMINI_MODEL=gemini-3.6-flash
 GEMINI_MODEL_FALLBACK=gemini-2.5-flash-lite
 
-# Optional security hardening for production API
+# Required in production for origin validation
 CHAT_ALLOWED_ORIGIN=https://your-domain.com
+
+# Optional tuning (defaults: 5 requests / 3600 seconds per IP)
+CHAT_RATE_LIMIT_MAX=5
+CHAT_RATE_LIMIT_WINDOW_SECONDS=3600
+
+# Vercel KV / Upstash Redis REST credentials (required in production for rate limiting)
+KV_REST_API_URL=...
+KV_REST_API_TOKEN=...
+# (Equivalent aliases are also supported)
+# UPSTASH_REDIS_REST_URL=...
+# UPSTASH_REDIS_REST_TOKEN=...
 ```
 
 Notes:
 
-- `GEMINI_*` and `CHAT_ALLOWED_ORIGIN` are server-side for API handling.
+- `GEMINI_*`, `CHAT_ALLOWED_ORIGIN`, `CHAT_RATE_LIMIT_*`, and KV credentials are server-side only.
 - Vite config now uses default env prefix behavior (no custom `envPrefix` override).
 - `CHAT_ALLOWED_ORIGIN` is intended for deployed environments (set it to your public domain).
 - In non-production runtime (`NODE_ENV !== production`), local origins (`localhost`, `127.0.0.1`) are explicitly allowed so local testing is not blocked.
+- The rate limiter uses the client IP from `x-forwarded-for` (fallback `x-real-ip`) and does not use socket IP.
+- Chatbot remains backend-mediated; direct client-side Gemini key usage is not deployment-safe.
+
+### Vercel KV setup
+
+1. Create a KV store in Vercel Storage.
+2. Link it to this project.
+3. Confirm the injected env vars (`KV_REST_API_URL`, `KV_REST_API_TOKEN`) exist in the target environment.
+4. Redeploy so the function can read the KV credentials.
 
 ---
 
@@ -174,9 +194,18 @@ Response (error):
 
 ```json
 {
-  "error": "..."
+  "error": "...",
+  "code": "..."
 }
 ```
+
+Example `code` values:
+
+- `forbidden_origin`
+- `payload_too_large`
+- `rate_limit_exceeded`
+- `provider_quota_exceeded`
+- `misconfigured_server`
 
 ---
 

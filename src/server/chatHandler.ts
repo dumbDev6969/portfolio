@@ -7,6 +7,23 @@ export type ChatHistoryTurn = {
   message: string;
 };
 
+type ChatErrorCode =
+  | 'invalid_request'
+  | 'misconfigured_server'
+  | 'provider_quota_exceeded'
+  | 'upstream_service_error';
+
+type ChatHandlerResponseBody = {
+  reply?: string;
+  error?: string;
+  code?: ChatErrorCode;
+};
+
+type ChatHandlerResult = {
+  status: number;
+  body: ChatHandlerResponseBody;
+};
+
 type ProjectRecord = {
   title: string;
   description: string;
@@ -38,7 +55,7 @@ type GeminiResponse = {
   };
 };
 
-const MAX_HISTORY_TURNS = 6;
+export const MAX_HISTORY_TURNS = 6;
 const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 const STATIC_BIO_CONTEXT = [
   "You are answering questions on Joshua Cabuang's portfolio site, as his assistant.",
@@ -168,19 +185,19 @@ export async function callGeminiWithFallback(
   apiKey: string,
   primaryModel?: string,
   fallbackModel?: string
-) {
+): Promise<ChatHandlerResult> {
   const trimmedMessage = message.trim();
   if (!trimmedMessage) {
     return {
       status: 400,
-      body: { error: 'Message is required.' },
+      body: { error: 'Message is required.', code: 'invalid_request' },
     };
   }
 
   if (!apiKey) {
     return {
       status: 500,
-      body: { error: 'Server misconfiguration: GEMINI_API_KEY is missing.' },
+      body: { error: 'Server misconfiguration: GEMINI_API_KEY is missing.', code: 'misconfigured_server' },
     };
   }
 
@@ -190,6 +207,7 @@ export async function callGeminiWithFallback(
 
   let lastStatus = 502;
   let lastError = 'Unable to reach Gemini service.';
+  let lastCode: ChatErrorCode = 'upstream_service_error';
 
   for (const model of modelsToTry) {
     try {
@@ -207,13 +225,22 @@ export async function callGeminiWithFallback(
 
       const data = await parseGeminiResponse(response);
       if (!response.ok) {
+        if (response.status === 429) {
+          lastStatus = 429;
+          lastCode = 'provider_quota_exceeded';
+          lastError = data?.error?.message || 'Gemini quota exhausted. Please try again later.';
+          continue;
+        }
+
         lastStatus = 502;
+        lastCode = 'upstream_service_error';
         lastError = data?.error?.message || `Gemini request failed with status ${response.status} using model ${model}.`;
         continue;
       }
 
       if (!data) {
         lastStatus = 502;
+        lastCode = 'upstream_service_error';
         lastError = `Gemini returned an empty or invalid response for model ${model}.`;
         continue;
       }
@@ -221,6 +248,7 @@ export async function callGeminiWithFallback(
       const reply = extractGeminiReply(data);
       if (!reply) {
         lastStatus = 502;
+        lastCode = 'upstream_service_error';
         lastError = `Gemini response did not contain a valid reply for model ${model}.`;
         continue;
       }
@@ -231,12 +259,13 @@ export async function callGeminiWithFallback(
       };
     } catch (error) {
       lastStatus = 502;
+      lastCode = 'upstream_service_error';
       lastError = error instanceof Error ? error.message : `Gemini request failed unexpectedly for model ${model}.`;
     }
   }
 
   return {
     status: lastStatus,
-    body: { error: lastError },
+    body: { error: lastError, code: lastCode },
   };
 }
