@@ -20,6 +20,13 @@ export default function Nav() {
     const OFFSET = 120; // px — accounts for sticky nav height + buffer
 
     const getActive = () => {
+      // If the user has scrolled to (or very near) the bottom, activate the last section
+      const scrolledToBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (scrolledToBottom) {
+        return NAV_ITEMS[NAV_ITEMS.length - 1];
+      }
+
       // Iterate sections in reverse so the last one above the offset wins
       for (let i = NAV_ITEMS.length - 1; i >= 0; i--) {
         const id = NAV_ITEMS[i];
